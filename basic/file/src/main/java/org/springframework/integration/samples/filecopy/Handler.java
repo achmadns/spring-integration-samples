@@ -16,29 +16,49 @@
 
 package org.springframework.integration.samples.filecopy;
 
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import org.apache.log4j.Logger;
+
 import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 
 /**
  * A class providing several handling methods for different types of payloads.
- * 
+ *
  * @author Mark Fisher
  * @author Marius Bogoevici
  */
 public class Handler {
+    private final ConnectionFactory connectionFactory = new ConnectionFactory();
+    private final Connection connection = connectionFactory.newConnection();
+    private final Channel channel = connection.createChannel();
+    private final Logger log = Logger.getLogger(Handler.class);
 
-	public String handleString(String input) {
-		System.out.println("Copying text: " + input);
-		return input.toUpperCase();
-	}
-	
-	public File handleFile(File input) {
-		System.out.println("Copying file: " + input.getAbsolutePath());
-		return input;
-	}
-	
-	public byte[] handleBytes(byte[] input) {
-		System.out.println("Copying " + input.length + " bytes ...");
-		return new String(input).toUpperCase().getBytes();
-	}
+    public Handler() throws IOException, TimeoutException {
+    }
+
+    public String handleString(String input) {
+        System.out.println("Copying text: " + input);
+        return input.toUpperCase();
+    }
+
+    public File handleFile(File input) {
+        log.info("Copying file: " + input.getAbsolutePath());
+        return input;
+    }
+
+    public void handle(File input) throws IOException {
+        final String path = input.getAbsolutePath();
+        channel.basicPublish("", "oss.download", null , path.getBytes());
+        log.info("Published message: " + path);
+    }
+
+    public byte[] handleBytes(byte[] input) {
+        System.out.println("Copying " + input.length + " bytes ...");
+        return new String(input).toUpperCase().getBytes();
+    }
 
 }

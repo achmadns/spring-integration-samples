@@ -14,16 +14,19 @@
 
 	<file:inbound-channel-adapter id="filesIn"
 	                              directory="file:${java.io.tmpdir}/spring-integration-samples/input">
-	    <integration:poller id="poller" fixed-delay="5000"/>
+	    <integration:poller id="poller" fixed-delay="100"/>
 	</file:inbound-channel-adapter>
 
 	<integration:service-activator input-channel="filesIn"
-	                               output-channel="filesOut"
-                                   ref="handler"/>
+	                               output-channel="nochannel"
+                                   ref="handler"
+									method="handle"/>
+
+	<integration:channel id="nochannel"/>
 
 	<file:outbound-channel-adapter id="filesOut"
 								   directory="file:${java.io.tmpdir}/spring-integration-samples/output"
-								   delete-source-files="true"/>
+								   delete-source-files="false"/>
 
 	<bean id="handler" class="org.springframework.integration.samples.filecopy.Handler"/>
 
